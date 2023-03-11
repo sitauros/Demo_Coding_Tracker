@@ -9,7 +9,6 @@ namespace CodingTracker
         static void Main(string[] args)
         {
             string? ConnectionString = ConfigurationManager.AppSettings.Get("DB Path");
-            Console.WriteLine(ConnectionString);  
         }
     }
 }
