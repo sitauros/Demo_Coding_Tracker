@@ -4,33 +4,36 @@ using Microsoft.Data.Sqlite;
 
 namespace CodingTracker
 {
-    internal static class Database
+    internal class Database
     {
-        internal static string? ConnectionString { get; set; }
+        private string ConnectionString { get; set; }
+        private string DatabaseName { get; set; }   
 
-        internal static void CreateDatabase()
+        public Database(string DB_Path, string DB_Name)
         {
-            using var connection = new SqliteConnection(ConnectionString);
+            this.ConnectionString = DB_Path;
+            this.DatabaseName = DB_Name;
+
+            using var connection = new SqliteConnection(this.ConnectionString);
             connection.Open();
             var command = connection.CreateCommand();
-            command.CommandText = @"
-                    CREATE TABLE IF NOT EXISTS JuniorUnicornFirms (
-                        CompanyID       INTEGER     PRIMARY KEY AUTOINCREMENT NOT NULL,
-                        Name            TEXT        NOT NULL,
-                        DesiredSkill    TEXT        NOT NULL,
-                        YearsOfExp      INTEGER     NOT NULL,
-                        Perk            TEXT        NOT NULL 
+            command.CommandText = $@"
+                    CREATE TABLE IF NOT EXISTS {this.DatabaseName} (
+                        ID              INTEGER     PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        StartTime       TEXT        NOT NULL,
+                        EndTime         TEXT        NOT NULL,
+                        Duration        INTEGER     NOT NULL
                     )";
-            command.ExecuteNonQuery();
+            var test = command.ExecuteNonQuery();
         }
 
-        internal static int GetRecordCount()
+        internal int GetRecordCount()
         {
-            using var connection = new SqliteConnection(ConnectionString);
+            using var connection = new SqliteConnection(this.ConnectionString);
             connection.Open();
             var command = connection.CreateCommand();
-            command.CommandText = @"
-                    SELECT COUNT(*) FROM JuniorUnicornFirms
+            command.CommandText =$@"
+                    SELECT COUNT(*) FROM {this.DatabaseName}
                     ";
 
             int count = Convert.ToInt32(command.ExecuteScalar());
@@ -38,16 +41,16 @@ namespace CodingTracker
             return count;
         }
 
-        internal static DataTable GetCompanyByID(int CompanyID)
+        internal DataTable GetCompanyByID(int ID)
         {
-            using var connection = new SqliteConnection(ConnectionString);
+            using var connection = new SqliteConnection(this.ConnectionString);
             connection.Open();
             var command = connection.CreateCommand();
-            command.CommandText = @"
-                    SELECT * FROM JuniorUnicornFirms
-                    WHERE CompanyID = $CompanyID
+            command.CommandText = $@"
+                    SELECT * FROM {this.DatabaseName}
+                    WHERE ID = $ID
                     ";
-            command.Parameters.AddWithValue("$CompanyID", CompanyID);
+            command.Parameters.AddWithValue("$ID", ID);
             using SqliteDataReader reader = command.ExecuteReader();
 
             DataTable resultSet = new DataTable();
@@ -56,15 +59,15 @@ namespace CodingTracker
             return resultSet;
         }
 
-        internal static DataTable RetrievePageBeforeID(int ID_offset)
+        internal DataTable RetrievePageBeforeID(int ID_offset)
         {
-            using var connection = new SqliteConnection(ConnectionString);
+            using var connection = new SqliteConnection(this.ConnectionString);
             connection.Open();
             var command = connection.CreateCommand();
-            command.CommandText = @"
-                    SELECT * FROM JuniorUnicornFirms
-                    WHERE CompanyID < $ID_offset
-                    ORDER BY CompanyID DESC
+            command.CommandText = $@"
+                    SELECT * FROM {this.DatabaseName}
+                    WHERE ID < $ID_offset
+                    ORDER BY ID DESC
                     LIMIT 5
                     ";
             command.Parameters.AddWithValue("ID_offset", ID_offset);
@@ -73,21 +76,21 @@ namespace CodingTracker
             // Rows returned are in descending order and require sorting
             DataTable resultSet = new DataTable();
             resultSet.Load(reader);
-            resultSet.DefaultView.Sort = "CompanyID ASC";
+            resultSet.DefaultView.Sort = "ID ASC";
             resultSet = resultSet.DefaultView.ToTable();
 
             return resultSet;
         }
 
-        internal static DataTable RetrievePageAfterID(int ID_offset)
+        internal DataTable RetrievePageAfterID(int ID_offset)
         {
-            using var connection = new SqliteConnection(ConnectionString);
+            using var connection = new SqliteConnection(this.ConnectionString);
             connection.Open();
             var command = connection.CreateCommand();
-            command.CommandText = @"
-                    SELECT * FROM JuniorUnicornFirms
-                    WHERE CompanyID > $ID_offset
-                    ORDER BY CompanyID ASC
+            command.CommandText = $@"
+                    SELECT * FROM {this.DatabaseName}
+                    WHERE ID > $ID_offset
+                    ORDER BY ID ASC
                     LIMIT 5;
                     ";
             command.Parameters.AddWithValue("ID_offset", ID_offset);
@@ -100,27 +103,25 @@ namespace CodingTracker
             return resultSet;
         }
 
-        internal static DataTable AddNewCompany(string name, string skill, int yearsOfExp, string perk)
+        internal DataTable AddNewSession(string StartTime, string EndTime, int Duration)
         {
-            using var connection = new SqliteConnection(ConnectionString);
+            using var connection = new SqliteConnection(this.ConnectionString);
             connection.Open();
             var command = connection.CreateCommand();
-            command.CommandText = @"
-                    INSERT INTO JuniorUnicornFirms (Name, DesiredSkill, YearsOfExp, Perk) 
-                    VALUES ($name, $skill, $yearsOfExp, $perk
+            command.CommandText = $@"
+                    INSERT INTO {this.DatabaseName} (StartTime, EndTime, Duration) 
+                    VALUES ($StartTime, $EndTime, $Duration
                     )";
-            command.Parameters.AddWithValue("$name", name);
-            command.Parameters.AddWithValue("$skill", skill);
-            command.Parameters.AddWithValue("$yearsOfExp", yearsOfExp);
-            command.Parameters.AddWithValue("$perk", perk);
+            command.Parameters.AddWithValue("$StartTime", StartTime);
+            command.Parameters.AddWithValue("$EndTime", EndTime);
+            command.Parameters.AddWithValue("$Duration", Duration);
             command.ExecuteNonQuery();
 
-            command.CommandText = @"
-                    SELECT * FROM JuniorUnicornFirms
-                    WHERE Name=$name
-                    AND DesiredSkill=$skill
-                    AND YearsOfExp=$yearsOfExp
-                    AND Perk=$perk
+            command.CommandText = $@"
+                    SELECT * FROM {this.DatabaseName}
+                    WHERE StartTime=$StartTime
+                    AND EndTime=$EndTime
+                    AND Duration=$Duration
                     ";
 
             using SqliteDataReader reader = command.ExecuteReader();
@@ -131,34 +132,33 @@ namespace CodingTracker
             return resultSet;
         }
 
-        internal static void DeleteCompany(int CompanyID)
+        internal void DeleteCompany(int ID)
         {
-            using var connection = new SqliteConnection(ConnectionString);
+            using var connection = new SqliteConnection(this.ConnectionString);
             connection.Open();
             var command = connection.CreateCommand();
-            command.CommandText = @"
-                    DELETE FROM JuniorUnicornFirms 
-                    WHERE CompanyID = $CompanyID
+            command.CommandText = $@"
+                    DELETE FROM {this.DatabaseName} 
+                    WHERE ID = $ID
                     ";
-            command.Parameters.AddWithValue("$CompanyID", CompanyID);
+            command.Parameters.AddWithValue("$ID", ID);
             command.ExecuteNonQuery();
         }
 
-        internal static void UpdateCompany(DataTable table)
+        internal void UpdateCompany(DataTable table)
         {
-            using var connection = new SqliteConnection(ConnectionString);
+            using var connection = new SqliteConnection(this.ConnectionString);
             connection.Open();
             var command = connection.CreateCommand();
-            command.CommandText = @"
-                    UPDATE JuniorUnicornFirms
-                    SET Name=$name, DesiredSkill=$skill, YearsOfExp=$yearsOfExp, Perk=$perk
-                    WHERE CompanyID = $CompanyID
+            command.CommandText = $@"
+                    UPDATE {this.DatabaseName}
+                    SET StartTime=$StartTime, EndTime=$EndTime, Duration=$Duration
+                    WHERE ID = $ID
                     ";
-            command.Parameters.AddWithValue("$CompanyID", table.Rows[0]["CompanyID"]);
-            command.Parameters.AddWithValue("$name", table.Rows[0]["Name"]);
-            command.Parameters.AddWithValue("$skill", table.Rows[0]["DesiredSkill"]);
-            command.Parameters.AddWithValue("$yearsOfExp", table.Rows[0]["YearsOfExp"]);
-            command.Parameters.AddWithValue("$perk", table.Rows[0]["Perk"]);
+            command.Parameters.AddWithValue("$ID", table.Rows[0]["ID"]);
+            command.Parameters.AddWithValue("$StartTime", table.Rows[0]["StartTime"]);
+            command.Parameters.AddWithValue("$EndTime", table.Rows[0]["EndTime"]);
+            command.Parameters.AddWithValue("$Duration", table.Rows[0]["Duration"]);
             command.ExecuteNonQuery();
         }
     }
