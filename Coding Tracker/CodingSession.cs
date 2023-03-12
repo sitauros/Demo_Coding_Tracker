@@ -13,7 +13,6 @@ namespace CodingTracker
             this.ID = ID;
             this.StartTime = StartTime;
             this.EndTime = EndTime;
-
         }
 
         private int CalculateDuration()
