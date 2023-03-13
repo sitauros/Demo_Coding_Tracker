@@ -1,7 +1,4 @@
-﻿using System;
-using System.Data;
-using System.Diagnostics.Metrics;
-using CodingTracker;
+﻿using System.Data;
 using ConsoleTableExt;
 
 namespace CodingTracker
@@ -138,15 +135,15 @@ Your input: ");
         {
             Console.Clear();
             Console.WriteLine(@"=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-Add a new company to the Coding Tracker Database
+Add a new session to the Coding Tracker Database
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-1) Enter your session's starting time in military format (YYYY-MM-DD-HH:MM): ");
-            string StartTime = Validation.ValidateUserString();
-            Console.WriteLine("2) Enter your session's ending time in military format (YYYY-MM-DD-HH:MM): ");
-            string EndTime = Validation.ValidateUserString();
+1) Enter start time in military format (MM/DD/YYYY HH:MM): ");
+            DateTime StartTime = Validation.ValidateDateTime();
+            Console.WriteLine("2) Enter end time in military format (MM/DD/YYYY HH:MM): ");
+            DateTime EndTime = Validation.ValidateDateTime();
             int Duration = Validation.calculateDuration();
 
-            var resultSet = model.AddSession(StartTime, EndTime, Duration);
+            var resultSet = model.AddSession(StartTime.ToString(), EndTime.ToString(), Duration);
             FormatTable(resultSet);
             BackToMainMenu("New session added.");
         }
@@ -174,23 +171,23 @@ Enter the session ID: ");
 2) Update session end time.
 
 Your input: ");
-
+                    //TODO: Change this to simply enter both dates and calculate new duration
                     var result = Validation.ValidateIntegerRange(1, 4);
                     string return_message = "";
 
                     switch (result)
                     {
                         case 1:
-                            Console.WriteLine("Enter your session's starting time in military format (YYYY-MM-DD-HH:MM): ");
-                            string StartTime = Validation.ValidateUserString();
+                            Console.WriteLine("Enter start time in military format (MM/DD/YYYY HH:MM): ");
+                            DateTime StartTime = Validation.ValidateDateTime();
                             resultSet.Rows[0]["StartTime"] = StartTime;
-                            return_message = "Updated session start time to: " + StartTime;
+                            return_message = "Updated start time to: " + StartTime;
                             break;
                         case 2:
-                            Console.WriteLine("Enter your session's ending time in military format (YYYY-MM-DD-HH:MM): ");
-                            string EndTime = Validation.ValidateUserString();
+                            Console.WriteLine("Enter end time in military format (MM/DD/YYYY HH:MM): ");
+                            DateTime EndTime = Validation.ValidateDateTime();
                             resultSet.Rows[0]["EndTime"] = EndTime;
-                            return_message = "Updated session start time to: " + EndTime;
+                            return_message = "Updated end time to: " + EndTime;
                             break;
                     }
 
@@ -216,7 +213,7 @@ Your input: ");
             Console.WriteLine(@"=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 Delete an entry in the Coding Tracker database
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-Enter the company's ID: ");
+Enter the session ID: ");
 
             int SessionID;
             var input = Console.ReadLine();
