@@ -137,15 +137,24 @@ Your input: ");
             Console.WriteLine(@"=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 Add a new session to the Coding Tracker Database
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-1) Enter start time in military format (MM/DD/YYYY HH:MM): ");
+1) Enter start time in military hours (MM/DD/YYYY HH:MM): ");
             DateTime StartTime = Validation.ValidateDateTime();
-            Console.WriteLine("2) Enter end time in military format (MM/DD/YYYY HH:MM): ");
+            Console.WriteLine("2) Enter end time in military hours (MM/DD/YYYY HH:MM): ");
             DateTime EndTime = Validation.ValidateDateTime();
-            int Duration = Validation.calculateDuration();
 
-            var resultSet = model.AddSession(StartTime.ToString(), EndTime.ToString(), Duration);
-            FormatTable(resultSet);
-            BackToMainMenu("New session added.");
+            string duration = Validation.calculateDuration(StartTime, EndTime);
+
+            if (duration == "N/A")
+            {
+                BackToMainMenu("End time is prior to start time.");
+            }
+            else
+            {
+                // Storing dates as MM/DD/YYYY HH:MM and removing seconds
+                var resultSet = model.AddSession(StartTime.ToString("g"), EndTime.ToString("g"), duration);
+                FormatTable(resultSet);
+                BackToMainMenu("New session added.");
+            }
         }
 
         private void UpdateSession()
@@ -178,13 +187,13 @@ Your input: ");
                     switch (result)
                     {
                         case 1:
-                            Console.WriteLine("Enter start time in military format (MM/DD/YYYY HH:MM): ");
+                            Console.WriteLine("Enter start time in military hours (MM/DD/YYYY HH:MM): ");
                             DateTime StartTime = Validation.ValidateDateTime();
                             resultSet.Rows[0]["StartTime"] = StartTime;
                             return_message = "Updated start time to: " + StartTime;
                             break;
                         case 2:
-                            Console.WriteLine("Enter end time in military format (MM/DD/YYYY HH:MM): ");
+                            Console.WriteLine("Enter end time in military hours (MM/DD/YYYY HH:MM): ");
                             DateTime EndTime = Validation.ValidateDateTime();
                             resultSet.Rows[0]["EndTime"] = EndTime;
                             return_message = "Updated end time to: " + EndTime;

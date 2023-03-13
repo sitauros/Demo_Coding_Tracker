@@ -20,7 +20,7 @@ namespace CodingTracker
                         ID              INTEGER     PRIMARY KEY AUTOINCREMENT NOT NULL,
                         StartTime       TEXT        NOT NULL,
                         EndTime         TEXT        NOT NULL,
-                        Duration        INTEGER     NOT NULL
+                        Duration        TEXT        NOT NULL
                     )";
             var test = command.ExecuteNonQuery();
         }
@@ -124,7 +124,7 @@ namespace CodingTracker
             return resultSet;
         }
 
-        internal DataTable AddSession(string StartTime, string EndTime, int Duration)
+        internal DataTable AddSession(string StartTime, string EndTime, string Duration)
         {
             using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
