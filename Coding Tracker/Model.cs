@@ -73,37 +73,31 @@ namespace CodingTracker
                     ";
             command.Parameters.AddWithValue("$ID", ID);
             using SqliteDataReader reader = command.ExecuteReader();
-
-            DataTable resultSet = new DataTable();
-            resultSet.Load(reader);
-
-            return resultSet;
+            List<CodingSession> records = RetrieveRecords(reader);
+            return records;
         }
 
-        internal DataTable RetrievePageBeforeID(int ID_offset)
+        internal List<CodingSession> RetrievePageBeforeID(int ID_offset)
         {
             using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
             var command = connection.CreateCommand();
             command.CommandText = $@"
-                    SELECT * FROM {DatabaseName}
-                    WHERE ID < $ID_offset
-                    ORDER BY ID DESC
-                    LIMIT 5
+                    SELECT * FROM (
+                            SELECT * FROM {DatabaseName}
+                            WHERE ID < $ID_offset
+                            ORDER BY ID DESC 
+                            LIMIT 5
+                    ) AS DATABASE
+                    ORDER BY ID ASC
                     ";
             command.Parameters.AddWithValue("ID_offset", ID_offset);
-
             using SqliteDataReader reader = command.ExecuteReader();
-            // Rows returned are in descending order and require sorting
-            DataTable resultSet = new DataTable();
-            resultSet.Load(reader);
-            resultSet.DefaultView.Sort = "ID ASC";
-            resultSet = resultSet.DefaultView.ToTable();
-
-            return resultSet;
+            List<CodingSession> records = RetrieveRecords(reader);
+            return records;
         }
 
-        internal DataTable RetrievePageAfterID(int ID_offset)
+        internal List<CodingSession> RetrievePageAfterID(int ID_offset)
         {
             using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
