@@ -62,7 +62,7 @@ namespace CodingTracker
             return count;
         }
 
-        internal DataTable GetSessionByID(int ID)
+        internal List<CodingSession> GetSessionByID(int ID)
         {
             using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
@@ -109,16 +109,12 @@ namespace CodingTracker
                     LIMIT 5;
                     ";
             command.Parameters.AddWithValue("ID_offset", ID_offset);
-
             using SqliteDataReader reader = command.ExecuteReader();
-
-            DataTable resultSet = new DataTable();
-            resultSet.Load(reader);
-
-            return resultSet;
+            List<CodingSession> records = RetrieveRecords(reader);
+            return records;
         }
 
-        internal DataTable AddSession(string StartTime, string EndTime, string Duration)
+        internal List<CodingSession> AddSession(CodingSession session)
         {
             using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
@@ -127,9 +123,9 @@ namespace CodingTracker
                     INSERT INTO {DatabaseName} (StartTime, EndTime, Duration) 
                     VALUES ($StartTime, $EndTime, $Duration
                     )";
-            command.Parameters.AddWithValue("$StartTime", StartTime);
-            command.Parameters.AddWithValue("$EndTime", EndTime);
-            command.Parameters.AddWithValue("$Duration", Duration);
+            command.Parameters.AddWithValue("$StartTime", session.StartTime);
+            command.Parameters.AddWithValue("$EndTime", session.EndTime);
+            command.Parameters.AddWithValue("$Duration", session.Duration);
             command.ExecuteNonQuery();
 
             command.CommandText = $@"
@@ -140,13 +136,9 @@ namespace CodingTracker
                     ORDER BY ID DESC
                     LIMIT 1
                     ";
-
             using SqliteDataReader reader = command.ExecuteReader();
-
-            DataTable resultSet = new DataTable();
-            resultSet.Load(reader);
-
-            return resultSet;
+            List<CodingSession> records = RetrieveRecords(reader);
+            return records;
         }
 
         internal void DeleteSession(int ID)
@@ -162,7 +154,7 @@ namespace CodingTracker
             command.ExecuteNonQuery();
         }
 
-        internal void UpdateSession(DataTable table)
+        internal void UpdateSession(List<CodingSession> table)
         {
             using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
@@ -172,11 +164,22 @@ namespace CodingTracker
                     SET StartTime=$StartTime, EndTime=$EndTime, Duration=$Duration
                     WHERE ID = $ID
                     ";
-            command.Parameters.AddWithValue("$ID", table.Rows[0]["ID"]);
-            command.Parameters.AddWithValue("$StartTime", table.Rows[0]["StartTime"]);
-            command.Parameters.AddWithValue("$EndTime", table.Rows[0]["EndTime"]);
-            command.Parameters.AddWithValue("$Duration", table.Rows[0]["Duration"]);
+            command.Parameters.AddWithValue("$ID", table[0].ID);
+            command.Parameters.AddWithValue("$StartTime", table[0].StartTime);
+            command.Parameters.AddWithValue("$EndTime", table[0].EndTime);
+            command.Parameters.AddWithValue("$Duration", table[0].Duration);
             command.ExecuteNonQuery();
+        }
+
+        internal List<CodingSession> RetrieveRecords(SqliteDataReader reader)
+        {
+            List<CodingSession> records = new();
+            while (reader.Read())
+            {
+                CodingSession row = new CodingSession((long)reader[0], (string)reader[1], (string)reader[2], (string)reader[3]);
+                records.Add(row);
+            }
+            return records;
         }
     }
 }

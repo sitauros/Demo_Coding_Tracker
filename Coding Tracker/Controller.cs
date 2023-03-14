@@ -1,23 +1,22 @@
-﻿using System;
-using System.Configuration;
+﻿using System.Configuration;
 
 namespace CodingTracker
 {
     internal class Controller
     {
-        private Model model { get; set; }
-        private View view { get; set; }
+        private Model Model { get; set; }
+        private View View { get; set; }
 
         public Controller(string? DB_Path, string? DB_Name)
         {
-            model = new Model(DB_Path, DB_Name);
-            view = new View(model);
+            Model = new Model(DB_Path, DB_Name);
+            View = new View(Model);
         }
 
         static void Main(string[] args)
         {
             Controller controller = new Controller(ConfigurationManager.AppSettings.Get("DB Path"), ConfigurationManager.AppSettings.Get("DB Name"));
-            controller.view.PrintMainMenu();
+            controller.View.PrintMainMenu();
         }
 
         internal static void ExitProgram()

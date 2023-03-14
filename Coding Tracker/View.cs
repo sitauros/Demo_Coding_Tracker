@@ -1,15 +1,14 @@
-﻿using System.Data;
-using ConsoleTableExt;
+﻿using ConsoleTableExt;
 
 namespace CodingTracker
 {
     internal class View
     {
-        private Model model { get; set; }
+        private Model Model { get; set; }
 
-        internal View(Model model)
+        internal View(Model Model)
         {
-            this.model = model;
+            this.Model = Model;
         }
 
         private Dictionary<HeaderCharMapPositions, char> CharMapPositions = new Dictionary<HeaderCharMapPositions, char> {
@@ -79,10 +78,10 @@ Your input: ");
             bool continueLoop = true;
             int ID_offset = 0;
             int currentPage = 1;
-            int totalRecords = model.GetRecordCount();
+            int totalRecords = Model.GetRecordCount();
             int numPages = CalculateNumPages(totalRecords);
 
-            var resultSet = model.RetrievePageAfterID(ID_offset);
+            var resultSet = Model.RetrievePageAfterID(ID_offset);
             FormatPage(resultSet, numPages, currentPage, totalRecords);
 
             while (continueLoop)
@@ -112,8 +111,8 @@ Your input: ");
                 {
                     case 0:
                         currentPage = currentPage - 1;
-                        ID_offset = Convert.ToInt32(resultSet.Rows[0]["ID"]); // First record in result set
-                        resultSet = model.RetrievePageBeforeID(ID_offset);
+                        ID_offset = Convert.ToInt32(resultSet[0].ID); // First record in result set
+                        resultSet = Model.RetrievePageBeforeID(ID_offset);
                         FormatPage(resultSet, numPages, currentPage, totalRecords);
                         break;
                     case 1:
@@ -121,8 +120,8 @@ Your input: ");
                         break;
                     case 2:
                         currentPage = currentPage + 1;
-                        ID_offset = Convert.ToInt32(resultSet.Rows[4]["ID"]); // Last record in result set
-                        resultSet = model.RetrievePageAfterID(ID_offset);
+                        ID_offset = Convert.ToInt32(resultSet[4].ID); // Last record in result set
+                        resultSet = Model.RetrievePageAfterID(ID_offset);
                         FormatPage(resultSet, numPages, currentPage, totalRecords);
                         break;
                 }
@@ -142,19 +141,20 @@ Add a new session to the Coding Tracker Database
             Console.WriteLine("2) Enter end time in military hours (MM/DD/YYYY HH:MM): ");
             DateTime EndTime = Validation.ValidateDateTime();
 
-            string duration = Validation.calculateDuration(StartTime, EndTime);
-
+            string duration = Validation.CalculateDuration(StartTime, EndTime);
+            
             if (duration == "N/A")
             {
                 BackToMainMenu("End time is prior to start time.");
             }
             else
             {
-                // Storing dates as MM/DD/YYYY HH:MM and removing seconds
-                var resultSet = model.AddSession(StartTime.ToString("g"), EndTime.ToString("g"), duration);
+                // Stores dates in MM/DD/YYYY HH:MM format
+                CodingSession session = new CodingSession(-1, StartTime.ToString("g"), EndTime.ToString("g"), duration);
+                var resultSet = Model.AddSession(session);
                 FormatTable(resultSet);
                 BackToMainMenu("New session added.");
-            }
+            }        
         }
 
         private void UpdateSession()
@@ -170,9 +170,9 @@ Enter the session ID: ");
 
             if (Int32.TryParse(input, out SessionID))
             {
-                var resultSet = model.GetSessionByID(SessionID);
+                var resultSet = Model.GetSessionByID(SessionID);
 
-                if (resultSet.Rows.Count == 1)
+                if (resultSet.Count == 1)
                 {
                     FormatTable(resultSet);
                     Console.WriteLine("Enter a number below: \n");
@@ -180,8 +180,8 @@ Enter the session ID: ");
 2) Update session end time.
 
 Your input: ");
-                    //TODO: Change this to simply enter both dates and calculate new duration
-                    var result = Validation.ValidateIntegerRange(1, 4);
+
+                    var result = Validation.ValidateIntegerRange(1, 2);
                     string return_message = "";
 
                     switch (result)
@@ -189,21 +189,30 @@ Your input: ");
                         case 1:
                             Console.WriteLine("Enter start time in military hours (MM/DD/YYYY HH:MM): ");
                             DateTime StartTime = Validation.ValidateDateTime();
-                            resultSet.Rows[0]["StartTime"] = StartTime;
+                            resultSet[0].StartTime = StartTime.ToString("g");
+                            resultSet[0].Duration = Validation.CalculateDuration(StartTime, DateTime.Parse(resultSet[0].EndTime));
                             return_message = "Updated start time to: " + StartTime;
                             break;
                         case 2:
                             Console.WriteLine("Enter end time in military hours (MM/DD/YYYY HH:MM): ");
                             DateTime EndTime = Validation.ValidateDateTime();
-                            resultSet.Rows[0]["EndTime"] = EndTime;
+                            resultSet[0].EndTime = EndTime.ToString("g");
+                            resultSet[0].Duration = Validation.CalculateDuration(DateTime.Parse(resultSet[0].StartTime), EndTime);
                             return_message = "Updated end time to: " + EndTime;
                             break;
                     }
 
-                    model.UpdateSession(resultSet);
-                    resultSet = model.GetSessionByID(SessionID);
-                    FormatTable(resultSet);
-                    BackToMainMenu(return_message);
+                    if (resultSet[0].Duration == "N/A")
+                    {
+                        BackToMainMenu("End time is prior to start time.");
+                    }
+                    else
+                    {
+                        Model.UpdateSession(resultSet);
+                        resultSet = Model.GetSessionByID(SessionID);
+                        FormatTable(resultSet);
+                        BackToMainMenu(return_message);
+                    }
                 }
                 else
                 {
@@ -229,11 +238,11 @@ Enter the session ID: ");
 
             if (Int32.TryParse(input, out SessionID))
             {
-                var resultSet = model.GetSessionByID(SessionID);
+                var resultSet = Model.GetSessionByID(SessionID);
 
-                if (resultSet.Rows.Count == 1)
+                if (resultSet.Count == 1)
                 {
-                    model.DeleteSession(SessionID);
+                    Model.DeleteSession(SessionID);
                     FormatTable(resultSet);
                     BackToMainMenu("Session deleted with ID: " + SessionID);
                 }
@@ -248,8 +257,6 @@ Enter the session ID: ");
             }
         }
 
-       
-
         private void BackToMainMenu(string message)
         {
             Console.WriteLine("\n" + "-----------------------------------------------------------------------------------");
@@ -260,7 +267,7 @@ Enter the session ID: ");
             PrintMainMenu();
         }
 
-        private void FormatPage(DataTable resultSet, int numPages, int currentPage, int totalRecords)
+        private void FormatPage(List<CodingSession> resultSet, int numPages, int currentPage, int totalRecords)
         {
             Console.Clear();
             Console.WriteLine(@"=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -271,15 +278,16 @@ Now viewing page " + currentPage + " of " + numPages +
             FormatTable(resultSet);
         }
 
-        private void FormatTable(DataTable resultSet)
+        private void FormatTable(List<CodingSession> resultSet)
+
         {
             ConsoleTableBuilder
                .From(resultSet)
-               .WithColumn("Id", "StartTime", "EndTime", "Duration")
+               .WithColumn(new List<String> { "ID", "StartTime", "EndTime", "Duration"} )
                .WithTextAlignment(TextAlignments)
                .WithCharMapDefinition(CharMapDefinition.FramePipDefinition)
                .WithCharMapDefinition(CharMapDefinition.FramePipDefinition, CharMapPositions)
-               .ExportAndWriteLine(TableAligntment.Center);
+               .ExportAndWriteLine(TableAligntment.Center); 
         }
 
         private int CalculateNumPages(int totalRecords)

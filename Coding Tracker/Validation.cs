@@ -4,21 +4,6 @@ namespace CodingTracker
 {
     internal class Validation
     {
-        internal static string calculateDuration(DateTime startTime, DateTime endTime)
-        {
-            string duration = "N/A";
-
-            if (DateTime.Compare(endTime, startTime) >= 0) //endTime occurred after startTime
-            {
-                TimeSpan difference = endTime - startTime;
-                string days = difference.Days == 1 ? difference.Days + " day, " : difference.Days + " days, ";
-                string hours = difference.Hours == 1 ? difference.Hours + " hour, and " : difference.Hours + " hours, and ";
-                string minutes = difference.Minutes == 1 ? difference.Minutes + " minute" : difference.Hours + " minutes";
-                duration = days + hours + minutes;  
-            }
-
-            return duration;
-        }
 
         internal static int ValidateIntegerRange(int minValue, int maxValue)
         {
@@ -28,12 +13,28 @@ namespace CodingTracker
 
             while (!isValidInput || result < minValue || result > maxValue)
             {
-                Console.WriteLine("Invalid input. Please try again.");
+                Console.WriteLine("Invalid menu number. Please try again.");
                 Console.WriteLine("Your input: ");
                 isValidInput = int.TryParse(Console.ReadLine(), out result);
             }
 
             return result;
+        }
+
+        internal static string CalculateDuration(DateTime StartTime, DateTime EndTime)
+        {
+            string duration = "N/A";
+
+            if (DateTime.Compare(EndTime, StartTime) >= 0) //endTime occurred after startTime
+            {
+                TimeSpan difference = EndTime - StartTime;
+                string days = difference.Days == 1 ? difference.Days + " day, " : difference.Days + " days, ";
+                string hours = difference.Hours == 1 ? difference.Hours + " hour, and " : difference.Hours + " hours, and ";
+                string minutes = difference.Minutes == 1 ? difference.Minutes + " minute" : difference.Hours + " minutes";
+                duration = days + hours + minutes;
+            }
+         
+            return duration;
         }
 
         internal static DateTime ValidateDateTime()

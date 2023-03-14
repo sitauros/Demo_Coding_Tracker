@@ -1,25 +1,19 @@
-﻿using System;
-
-namespace CodingTracker
+﻿namespace CodingTracker
 {
     internal class CodingSession
     {
-        private int ID;
-        private DateTime StartTime;
-        private DateTime EndTime;
+        // Class fields must be public for ConsoleTableExt to retrieve column count from different assembly
+        public long ID { get; set; }
+        public string StartTime { get; set; }
+        public string EndTime { get; set; }
+        public string Duration { get; set; }
 
-        public CodingSession(int ID,  DateTime StartTime, DateTime EndTime)
+        public CodingSession(long ID, string StartTime, string EndTime, string Duration)
         {
             this.ID = ID;
             this.StartTime = StartTime;
             this.EndTime = EndTime;
-        }
-
-        private int CalculateDuration()
-        {
-            int delta = 0;
-
-            return delta;
+            this.Duration = Duration;
         }
     }
 }
