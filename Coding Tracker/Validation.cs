@@ -30,7 +30,7 @@ namespace CodingTracker
                 TimeSpan difference = EndTime - StartTime;
                 string days = difference.Days == 1 ? difference.Days + " day, " : difference.Days + " days, ";
                 string hours = difference.Hours == 1 ? difference.Hours + " hour, and " : difference.Hours + " hours, and ";
-                string minutes = difference.Minutes == 1 ? difference.Minutes + " minute" : difference.Hours + " minutes";
+                string minutes = difference.Minutes == 1 ? difference.Minutes + " minute" : difference.Minutes + " minutes";
                 duration = days + hours + minutes;
             }
          
