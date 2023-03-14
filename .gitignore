@@ -5,6 +5,8 @@
 
 # Exclude database 
 CodingTracker.db
+Properties
+Properties/*.json
 
 # User-specific files
 *.rsuser
