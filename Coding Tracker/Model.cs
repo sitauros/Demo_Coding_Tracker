@@ -7,16 +7,16 @@ namespace CodingTracker
     internal class Model
     {
         private string? ConnectionString { get; set; }
-        private string? DatabaseName { get; set; }   
+        private string? TableName { get; set; }   
 
-        public Model(string? DB_Path, string? DB_Name)
+        public Model(string? ConnectionString, string? TableName)
         {
-            initialize_DB(DB_Path, DB_Name);
-            using var connection = new SqliteConnection(ConnectionString);
+            initialize_DB(ConnectionString, TableName);
+            using var connection = new SqliteConnection(this.ConnectionString);
             connection.Open();
             var command = connection.CreateCommand();
             command.CommandText = $@"
-                    CREATE TABLE IF NOT EXISTS {DatabaseName} (
+                    CREATE TABLE IF NOT EXISTS {this.TableName} (
                         ID              INTEGER     PRIMARY KEY AUTOINCREMENT NOT NULL,
                         StartTime       TEXT        NOT NULL,
                         EndTime         TEXT        NOT NULL,
@@ -25,16 +25,16 @@ namespace CodingTracker
             var test = command.ExecuteNonQuery();
         }
 
-       private void initialize_DB(string? DB_Path, string? DB_Name)
+       private void initialize_DB(string? ConnectionString, string? TableName)
         {
-            if (String.IsNullOrEmpty(DB_Path))
+            if (String.IsNullOrEmpty(ConnectionString))
             {
                 Console.WriteLine("Missing connection string in App.config XML file");
                 Console.WriteLine("Press any key to exit program.");
                 Console.ReadLine();
                 Controller.ExitProgram();
             }
-            else if (String.IsNullOrEmpty(DB_Name))
+            else if (String.IsNullOrEmpty(TableName))
             {
                 Console.WriteLine("Missing database name in App.config XML file");
                 Console.WriteLine("Press any key to exit program.");
@@ -43,8 +43,8 @@ namespace CodingTracker
             }
             else
             {
-                ConnectionString = DB_Path;
-                DatabaseName = DB_Name;
+                this.ConnectionString = ConnectionString;
+                this.TableName = TableName;
             }
         }
 
@@ -54,7 +54,7 @@ namespace CodingTracker
             connection.Open();
             var command = connection.CreateCommand();
             command.CommandText =$@"
-                    SELECT COUNT(*) FROM {DatabaseName}
+                    SELECT COUNT(*) FROM {TableName}
                     ";
 
             int count = Convert.ToInt32(command.ExecuteScalar());
@@ -68,7 +68,7 @@ namespace CodingTracker
             connection.Open();
             var command = connection.CreateCommand();
             command.CommandText = $@"
-                    SELECT * FROM {DatabaseName}
+                    SELECT * FROM {TableName}
                     WHERE ID = $ID
                     ";
             command.Parameters.AddWithValue("$ID", ID);
@@ -84,11 +84,11 @@ namespace CodingTracker
             var command = connection.CreateCommand();
             command.CommandText = $@"
                     SELECT * FROM (
-                            SELECT * FROM {DatabaseName}
+                            SELECT * FROM {TableName}
                             WHERE ID < $ID_offset
                             ORDER BY ID DESC 
                             LIMIT 5
-                    ) AS DATABASE
+                    ) AS SESSIONS
                     ORDER BY ID ASC
                     ";
             command.Parameters.AddWithValue("ID_offset", ID_offset);
@@ -103,7 +103,7 @@ namespace CodingTracker
             connection.Open();
             var command = connection.CreateCommand();
             command.CommandText = $@"
-                    SELECT * FROM {DatabaseName}
+                    SELECT * FROM {TableName}
                     WHERE ID > $ID_offset
                     ORDER BY ID ASC
                     LIMIT 5;
@@ -120,7 +120,7 @@ namespace CodingTracker
             connection.Open();
             var command = connection.CreateCommand();
             command.CommandText = $@"
-                    INSERT INTO {DatabaseName} (StartTime, EndTime, Duration) 
+                    INSERT INTO {TableName} (StartTime, EndTime, Duration) 
                     VALUES ($StartTime, $EndTime, $Duration
                     )";
             command.Parameters.AddWithValue("$StartTime", session.StartTime);
@@ -129,7 +129,7 @@ namespace CodingTracker
             command.ExecuteNonQuery();
 
             command.CommandText = $@"
-                    SELECT * FROM {DatabaseName}
+                    SELECT * FROM {TableName}
                     WHERE StartTime=$StartTime
                     AND EndTime=$EndTime
                     AND Duration=$Duration
@@ -147,7 +147,7 @@ namespace CodingTracker
             connection.Open();
             var command = connection.CreateCommand();
             command.CommandText = $@"
-                    DELETE FROM {DatabaseName} 
+                    DELETE FROM {TableName} 
                     WHERE ID = $ID
                     ";
             command.Parameters.AddWithValue("$ID", ID);
@@ -160,7 +160,7 @@ namespace CodingTracker
             connection.Open();
             var command = connection.CreateCommand();
             command.CommandText = $@"
-                    UPDATE {DatabaseName}
+                    UPDATE {TableName}
                     SET StartTime=$StartTime, EndTime=$EndTime, Duration=$Duration
                     WHERE ID = $ID
                     ";

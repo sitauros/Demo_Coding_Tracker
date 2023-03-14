@@ -7,15 +7,15 @@ namespace CodingTracker
         private Model Model { get; set; }
         private View View { get; set; }
 
-        public Controller(string? DB_Path, string? DB_Name)
+        public Controller(string? ConnectionString, string? TableName)
         {
-            Model = new Model(DB_Path, DB_Name);
+            Model = new Model(ConnectionString, TableName);
             View = new View(Model);
         }
 
         static void Main(string[] args)
         {
-            Controller controller = new Controller(ConfigurationManager.AppSettings.Get("DB Path"), ConfigurationManager.AppSettings.Get("DB Name"));
+            Controller controller = new Controller(ConfigurationManager.AppSettings.Get("ConnectionString"), ConfigurationManager.AppSettings.Get("TableName"));
             controller.View.PrintMainMenu();
         }
 
