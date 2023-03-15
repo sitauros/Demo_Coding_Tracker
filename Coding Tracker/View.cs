@@ -149,7 +149,7 @@ Add a new session to the Coding Tracker Database
             }
             else
             {
-                // Stores dates in MM/DD/YYYY HH:MM format
+                // Stores dates in MM/DD/YYYY HH:MM format, ID set to token value
                 CodingSession session = new CodingSession(-1, StartTime.ToString("g"), EndTime.ToString("g"), duration);
                 var resultSet = Model.AddSession(session);
                 FormatTable(resultSet);
