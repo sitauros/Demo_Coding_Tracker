@@ -1,4 +1,4 @@
-# Demo_Coding_Tracker
+# Coding Tracker
 ![List Session](https://i.imgur.com/WusUsN8.gif)  
 A redux of the [Habit Tracker](https://github.com/sitauros/Demo_Habit_Logger) project that now tracks coding session datetimes instead of companies.  
 Record your session's *start* and *end* times via the instructions below to calculate the duration in human-friendly format.  
